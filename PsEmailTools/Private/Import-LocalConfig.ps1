@@ -11,22 +11,43 @@ function Import-LocalConfig {
         $ConfigPath = (Get-LocalConfigPath)
     )
     
-    # Help new users if the file is missing
-    if (Test-Path $ConfigPath) {} else {
+    if (Test-Path $ConfigPath) {
+        
+        $rawHash = ConvertFrom-StringData (
+            (Get-Content $ConfigPath) -join "`n"
+        )
+
+        ForEach ($Key in $rawHash.Keys) {
+
+            $rawValue = $rawHash[$Key].trim()
+
+            $Value = if ($rawValue -like '*,*') {
+
+                $rawValue -split ','
+
+            } elseif ($rawValue -match '^\d+$') {
+
+                $rawValue[$Key] -as [int]
+                
+            } else {
+
+                $rawValue[$Key]
+                
+            }
+
+            $props = @{
+                Name  = $Key
+                Value = $Value
+            }
+            New-Variable @props -Force
+        }
+        
+    } else {
+            
+        # Help new users if the file is missing
         Write-Warning "File not found!"
         Write-Warning "Please run New-LocalConfig"
-        break
-    }
 
-    $rawHash = ConvertFrom-StringData(
-        (Get-Content $ConfigPath) -join "`n"
-    )
-    ForEach ($Key in $rawHash.Keys) {
-        $props = @{
-            Name  = $Key
-            Value = $rawHash[$Key]
-        }
-        New-Variable @props -Force
     }
 
 }#END: function Import-LocalConfig {}
