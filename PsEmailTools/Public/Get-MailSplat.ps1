@@ -1,8 +1,15 @@
 function Get-MailSplat {
-    
+        
+    param(
+        [Parameter()]
+        [ValidateNotNull()]
+        [string]
+        $ConfigPath = (Get-LocalConfigPath)
+    )
+
     $hash = @{}
     
-    Import-LocalConfig
+    Import-LocalConfig -ConfigPath $ConfigPath
 
     Get-MailMessagePropNames | ForEach-Object {
         $name = "mailDefault$($_)"
